@@ -1,0 +1,183 @@
+import cv2
+import numpy as np
+import math
+#from scipy import signal
+import matplotlib.pyplot as plt
+
+'''
+image = cv2.imread("D:\Depot\Depot_GraduateSchool\IndustrialVision\lena.png", 0)
+dx = cv2.Sobel(image, cv2.CV_32F, 1, 0)
+dY = cv2.Sobel(image, cv2.CV_32F, 0, 1)
+dxdy = cv2.Sobel(image, cv2.CV_32F, 1, 1)
+plt.figure(figsize= (12,3))
+plt.subplot(141)
+plt.axis('off')
+plt.title('image')
+plt.imshow(image, cmap='gray')
+plt.subplot(142)
+plt.axis('off')
+plt.title(r'$\frac{dI}{dx}$')
+plt.imshow(dx, cmap='gray')
+plt.subplot(143)
+plt.axis('off')
+plt.title(r'$\frac{dI}{dy}$')
+plt.imshow(dY, cmap='gray')
+plt.subplot(144)
+plt.axis('off')
+plt.title(r'$\frac{dI}{dxdy}$')
+plt.imshow(dxdy, cmap='gray')
+plt.tight_layout()
+plt.show()
+'''
+'''
+image = cv2.imread("D:\Depot\Depot_GraduateSchool\IndustrialVision\lena.png")
+KSIZE = int(input('KSIZE : '))
+ALPHA = int(input('ALPHA : '))
+kernel = cv2.getGaussianKernel(KSIZE,0)
+kernel = -ALPHA * kernel @ kernel.T
+kernel[KSIZE//2, KSIZE//2] += 1 + ALPHA
+print(kernel.shape, kernel.dtype, kernel.sum())
+filtered = cv2.filter2D(image, -1, kernel)
+plt.figure(figsize=(8,4))
+plt.subplot(121)
+plt.axis('off')
+plt.title('image')
+plt.imshow(image[:,:,[2,1,0]])
+plt.subplot(122)
+plt.axis('off')
+plt.title('filtered')
+plt.imshow(filtered[:,:,[2,1,0]])
+plt.tight_layout()
+plt.show()
+'''
+'''
+image = cv2.imread("D:\Depot\Depot_GraduateSchool\IndustrialVision\lena.png", 0).astype(np.float32)/255
+kernel = cv2.getGaborKernel((21,21), 5,1,10,1,0, cv2.CV_32F)
+kernel /= math.sqrt( (kernel*kernel).sum())
+filtered = cv2.filter2D(image, -1, kernel)
+plt.figure(figsize=(8,3))
+plt.subplot(131)
+plt.axis('off')
+plt.title('image')
+plt.imshow(image, cmap='gray')
+plt.subplot(132)
+plt.axis('off')
+plt.title('kernel')
+plt.imshow(kernel, cmap='gray')
+plt.subplot(133)
+plt.axis('off')
+plt.title('filtered')
+plt.imshow(filtered, cmap='gray')
+plt.tight_layout()
+plt.show()
+'''
+'''
+image = cv2.imread("D:\Depot\Depot_GraduateSchool\IndustrialVision\lena.png", 0).astype(np.float32)/255
+fft = cv2.dft(image, flags=cv2.DFT_COMPLEX_OUTPUT)
+shifted = np.fft.fftshift(fft, axes=[0,1])
+magnitude = cv2.magnitude(shifted[:,:,0], shifted[:,:,1])
+magnitude = np.log(magnitude)
+restored = cv2.idft(fft, flags = cv2.DFT_SCALE | cv2.DFT_REAL_OUTPUT)
+plt.figure(figsize=(8,4))
+plt.subplot(121)
+plt.axis('off')
+plt.imshow(magnitude, cmap='gray')
+plt.subplot(122)
+plt.axis('off')
+plt.imshow(restored, cmap='gray')
+plt.tight_layout()
+plt.show()
+
+'''
+'''
+image = cv2.imread("D:\Depot\Depot_GraduateSchool\IndustrialVision\lena.png", 0).astype(np.float32)/255
+fft = cv2.dft(image, flags=cv2.DFT_COMPLEX_OUTPUT)
+fft_shift = np.fft.fftshift(fft, axes=[0,1])
+sz = 25
+mask = np.zeros(fft_shift.shape, np.uint8)
+mask[mask.shape[0]//2-sz:mask.shape[0]//2+sz,
+     mask.shape[1]//2-sz:mask.shape[1]//2+sz,:]=1
+mask2 = 1-mask
+fft_shift *= mask2
+fft = np.fft.ifftshift(fft_shift, axes=[0,1])
+filtered = cv2.idft(fft, flags = cv2.DFT_SCALE | cv2.DFT_REAL_OUTPUT)
+mask_new = np.dstack( (mask, np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)))
+kernel = cv2.getGaussianKernel(512,0)
+kernel = kernel @ kernel.T
+
+plt.figure(figsize=(12,4))
+plt.subplot(131)
+plt.axis('off')
+plt.title('original')
+plt.imshow(image, cmap='gray')
+plt.subplot(132)
+plt.axis('off')
+plt.title('no high frequencies')
+plt.imshow(filtered, cmap='gray')
+plt.subplot(133)
+plt.axis('off')
+plt.title('mask')
+plt.imshow(kernel, cmap='gray')
+plt.tight_layout()
+plt.show()
+'''
+'''
+image = cv2.imread("D:\Depot\Depot_GraduateSchool\IndustrialVision\lena.png", 0)
+thresholdValue = int(input('threshold value : '))
+thr, mask = cv2.threshold(image, thresholdValue, 1, cv2.THRESH_BINARY)
+print("Threshold used:", thr)
+adapt_mask = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11,10)
+plt.figure(figsize=(10,3))
+plt.subplot(131)
+plt.axis('off')
+plt.title('original')
+plt.imshow(image, cmap='gray')
+plt.subplot(132)
+plt.axis('off')
+plt.title('binary threshold')
+plt.imshow(mask, cmap='gray')
+plt.subplot(133)
+plt.axis('off')
+plt.title('adaptive threshold')
+plt.imshow(adapt_mask, cmap='gray')
+plt.tight_layout()
+plt.show()
+'''
+
+image = cv2.imread("D:\Depot\Depot_GraduateSchool\IndustrialVision\lena.png", 0)
+_, binary = cv2.threshold(image, -1, 1, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+eroded = cv2.morphologyEx(binary, cv2.MORPH_ERODE, (3,3), iterations = 10)
+dilated = cv2.morphologyEx(binary, cv2.MORPH_DILATE, (3,3), iterations = 10)
+
+opened = cv2.morphologyEx(binary, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)), iterations = 5)
+closed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)), iterations = 5)
+grad = cv2.morphologyEx(binary, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)))
+
+plt.figure(figsize=(10,10))
+plt.subplot(231)
+plt.axis('off')
+plt.title('binary')
+plt.imshow(binary, cmap='gray')
+plt.subplot(232)
+plt.axis('off')
+plt.title('erode 10 times')
+plt.imshow(eroded, cmap='gray')
+plt.subplot(233)
+plt.axis('off')
+plt.title('dilate 10 times')
+plt.imshow(dilated, cmap='gray')
+plt.subplot(234)
+plt.axis('off')
+plt.title('open 5 times')
+plt.imshow(opened, cmap='gray')
+plt.subplot(235)
+plt.axis('off')
+plt.title('close 5 times')
+plt.imshow(closed, cmap='gray')
+plt.subplot(236)
+plt.axis('off')
+plt.title('gradient')
+plt.imshow(grad, cmap='gray')
+plt.tight_layout()
+plt.show()
