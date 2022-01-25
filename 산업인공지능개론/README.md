@@ -1,4 +1,3 @@
 # 산업인공지능개론 프로젝트
 
--듀라블랭 과제 추가
--분류 과제 추가
+https://colab.research.google.com/drive/1Yx4obfP9puxvU7dTCaUVpOBpenicTllA?usp=sharing
